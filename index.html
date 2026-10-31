@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>nokudos · Free Strava &amp; Garmin year in review, private and in your browser</title>
+  <meta name="description" content="Turn your Strava or Garmin data export into a year in review: route heatmap, totals, personal records and a share card. Free, no login, nothing uploaded.">
+  <meta name="keywords" content="strava year in review, garmin year in review, strava wrapped, strava heatmap, garmin heatmap, strava export, personal records, running stats, cycling stats">
+  <link rel="canonical" href="https://astralunaproject.github.io/nokudos/">
+  <meta name="theme-color" content="#0d0f1a">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="nokudos · Your year in motion, from your own data">
+  <meta property="og:description" content="Strava and Garmin year in review with route heatmap, records and a share card. 100% in your browser.">
+  <meta property="og:url" content="https://astralunaproject.github.io/nokudos/">
+  <meta property="og:image" content="https://astralunaproject.github.io/nokudos/og.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="style.css">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebApplication",
+        "name": "nokudos",
+        "url": "https://astralunaproject.github.io/nokudos/",
+        "description": "Year in review for Strava and Garmin data exports: route heatmap, totals, personal records and share card, processed entirely in the browser.",
+        "applicationCategory": "SportsApplication",
+        "operatingSystem": "Any",
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+        "author": { "@type": "Person", "name": "Overwind", "url": "https://github.com/AstralunaProject" }
+      },
+      {
+        "@type": "FAQPage",
+        "mainEntity": [
+          { "@type": "Question", "name": "Is my data uploaded anywhere?", "acceptedAnswer": { "@type": "Answer", "text": "No. The ZIP is read by your browser on your device. nokudos has no server, no login and no analytics." } },
+          { "@type": "Question", "name": "How do I get my Strava export?", "acceptedAnswer": { "@type": "Answer", "text": "On strava.com open Settings, My Account, Download or Delete Your Account, then Request Your Archive. Strava emails a link to a ZIP, usually within a few hours." } },
+          { "@type": "Question", "name": "How do I get my Garmin export?", "acceptedAnswer": { "@type": "Answer", "text": "Sign in at garmin.com, open Account, Data Management, Export Your Data and request the export. Garmin emails a ZIP link, which can take a few days." } },
+          { "@type": "Question", "name": "Do I need Strava Premium?", "acceptedAnswer": { "@type": "Answer", "text": "No. The data export is available on free accounts, and so is nokudos." } }
+        ]
+      }
+    ]
+  }
+  </script>
+</head>
+<body>
+  <header class="top">
+    <a class="brand" href="./"><img src="icon.svg" alt="" width="28" height="28"> nokudos</a>
+    <a class="repo" href="https://github.com/AstralunaProject/nokudos">Source on GitHub</a>
+  </header>
+
+  <main>
+    <section id="start" class="hero">
+      <h1>Your year in motion.<br><span>From your own data.</span></h1>
+      <p class="lead">Drop your Strava or Garmin export and get a year in review: route heatmap, totals, personal records and a card to share. Free, no login, and nothing leaves your device.</p>
+
+      <label id="drop" class="drop">
+        <input id="file" type="file" accept=".zip,application/zip">
+        <strong>Drop your export ZIP here</strong>
+        <span>or click to choose the file</span>
+      </label>
+      <p class="or">No export at hand? <button id="demo" type="button" class="link">Try it with sample data</button></p>
+
+      <div id="progress" class="progress" hidden>
+        <progress id="bar" max="1" value="0"></progress>
+        <p id="progressText" aria-live="polite">Opening the archive…</p>
+      </div>
+      <p id="error" class="error" role="alert" hidden></p>
+
+      <details class="how">
+        <summary>How do I get my export?</summary>
+        <div class="how-grid">
+          <div>
+            <h3>Strava</h3>
+            <ol>
+              <li>On strava.com, open <em>Settings → My Account</em>.</li>
+              <li>Under <em>Download or Delete Your Account</em>, click <em>Get Started</em>.</li>
+              <li>Click <em>Request Your Archive</em>. A link to the ZIP arrives by email.</li>
+            </ol>
+            <p class="hint">Keep Strava's language on English when you request it: the column names of <code>activities.csv</code> follow it.</p>
+          </div>
+          <div>
+            <h3>Garmin Connect</h3>
+            <ol>
+              <li>Sign in at garmin.com and open <em>Account → Data Management</em>.</li>
+              <li>Choose <em>Export Your Data</em> and request the export.</li>
+              <li>Garmin emails a link to the ZIP, which can take a few days.</li>
+            </ol>
+          </div>
+        </div>
+      </details>
+    </section>
+
+    <section id="review" class="review" hidden>
+      <div class="toolbar">
+        <label>Year <select id="year"></select></label>
+        <label>Sport <select id="sport"></select></label>
+        <label>Units
+          <select id="units">
+            <option value="metric">km</option>
+            <option value="imperial">miles</option>
+          </select>
+        </label>
+        <button id="reset" type="button" class="link">Load another file</button>
+      </div>
+
+      <p id="note" class="note" hidden></p>
+
+      <div class="numbers">
+        <div><span>Distance</span><strong id="nDistance"></strong><small id="nCompare"></small></div>
+        <div><span>Moving time</span><strong id="nTime"></strong></div>
+        <div><span>Elevation</span><strong id="nElevation"></strong></div>
+        <div><span>Activities</span><strong id="nCount"></strong></div>
+        <div><span>Active days</span><strong id="nDays"></strong></div>
+        <div><span>Longest streak</span><strong id="nStreak"></strong></div>
+      </div>
+
+      <div class="panel">
+        <h2>Where you went</h2>
+        <canvas id="map" width="1200" height="760" aria-label="Heatmap of your routes"></canvas>
+        <p id="mapNote" class="hint"></p>
+      </div>
+
+      <div class="grid">
+        <div class="panel">
+          <h2>Month by month</h2>
+          <div id="months"></div>
+        </div>
+        <div class="panel">
+          <h2>By sport</h2>
+          <table id="sports"></table>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>Every day of the year</h2>
+        <div id="calendar"></div>
+      </div>
+
+      <div class="grid">
+        <div class="panel">
+          <h2>Personal bests</h2>
+          <ul id="efforts" class="list"></ul>
+        </div>
+        <div class="panel">
+          <h2>Highlights</h2>
+          <ul id="highlights" class="list"></ul>
+        </div>
+      </div>
+
+      <div class="panel share">
+        <h2>Share card</h2>
+        <canvas id="card" aria-label="Year in review card"></canvas>
+        <div class="actions">
+          <button id="download" type="button">Download PNG</button>
+          <button id="share" type="button" hidden>Share</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="faq">
+      <h2>Questions</h2>
+      <details><summary>Is my data uploaded anywhere?</summary><p>No. The ZIP is read by your browser on your device. nokudos has no server, no login and no analytics; the source code is on GitHub.</p></details>
+      <details><summary>Do I need Strava Premium or Garmin Connect+?</summary><p>No. Both exports are available on free accounts, and so is nokudos.</p></details>
+      <details><summary>Why are personal bests missing for some activities?</summary><p>Bests come from the GPS track of each activity. Treadmill, indoor and manual activities have no track, so they count in the totals but not in the bests or the map.</p></details>
+      <details><summary>How big a file can it handle?</summary><p>The ZIP is read piece by piece instead of all at once. Exports with thousands of activities take a minute or two, because every GPS track is decoded.</p></details>
+    </section>
+  </main>
+
+  <footer class="bottom">
+    <p>Made by <a href="https://github.com/AstralunaProject">Overwind</a>. MIT licensed. Not affiliated with Strava or Garmin.</p>
+  </footer>
+
+  <script type="module" src="src/app.js"></script>
+</body>
+</html>

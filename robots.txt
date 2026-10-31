@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://astralunaproject.github.io/nokudos/sitemap.xml
